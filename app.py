@@ -85,25 +85,35 @@ if st.button("💾 Сохранить"):
         st.error(e)
     # ---------- SAN ----------
     with sub2:
-        st.header("САН")
+    with sub2:
+    st.header("САН")
 
-        scale = [-3,-2,-1,0,1,2,3]
+    scale = [-3,-2,-1,0,1,2,3]
 
-        def ask(q):
-            return st.select_slider(q, options=scale)
+    def ask(q, key):
+        return st.select_slider(q, options=scale, value=0, key=key)
 
-        S = [ask(f"S{i}") for i in range(10)]
-        A = [ask(f"A{i}") for i in range(10)]
-        M = [ask(f"M{i}") for i in range(10)]
+    # Самочувствие
+    st.subheader("Самочувствие")
+    S = [ask(f"S{i+1}", f"s_{i}") for i in range(10)]
 
-        def norm(x):
-            return (sum(x)/len(x)+3)/6*100
+    # Активность
+    st.subheader("Активность")
+    A = [ask(f"A{i+1}", f"a_{i}") for i in range(10)]
 
-        stress = 100 - (norm(S)+norm(A)+norm(M))/3
+    # Настроение
+    st.subheader("Настроение")
+    M = [ask(f"M{i+1}", f"m_{i}") for i in range(10)]
 
-        st.subheader(f"Стресс: {int(stress)}")
+    def norm(x):
+        return (sum(x)/len(x)+3)/6*100
 
-        if st.button("💾 Сохранить САН", use_container_width=True):
+    stress = 100 - (norm(S)+norm(A)+norm(M))/3
+
+    st.subheader(f"Стресс: {int(stress)}")
+
+    if st.button("💾 Сохранить САН", use_container_width=True):
+        try:
             supabase.table("stress").insert({
                 "user": user,
                 "time": str(datetime.datetime.now()),
@@ -113,6 +123,8 @@ if st.button("💾 Сохранить"):
 
             st.success("Сохранено")
 
+        except Exception as e:
+            st.error(e)
 # ================= ГРАФИК =================
 with tab2:
     st.header("График")
