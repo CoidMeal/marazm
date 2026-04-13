@@ -84,7 +84,60 @@ if st.button("💾 Сохранить"):
     except Exception as e:
         st.error(e)
     # ---------- SAN ----------
-    
+with tab1:
+    sub1, sub2 = st.tabs(["📅 Ежедневный", "🧠 САН"])
+
+    # ================= DAILY =================
+    with sub1:
+        st.header("Ежедневный тест")
+
+        labels = {
+            5: "Отлично",
+            4: "Хорошо",
+            3: "Нормально",
+            2: "Плохо",
+            1: "Очень плохо"
+        }
+
+        def ask(q):
+            return st.radio(q, [5,4,3,2,1],
+                format_func=lambda x: f"{x} - {labels[x]}")
+
+        q1 = ask("Усталость")
+        q2 = ask("Сон")
+        q3 = ask("Боль")
+        q4 = ask("Стресс")
+        q5 = ask("Настроение")
+
+        score = (q1*0.25 + q2*0.25 + q3*0.2 + q4*0.2 + q5*0.1)
+        stress = (5 - score) / 4 * 100
+
+        if q2 <= 2: stress += 10
+        if q1 <= 2: stress += 10
+        if q4 <= 2: stress += 10
+
+        if min(q1,q2,q3,q4,q5) == 1:
+            stress = max(stress, 80)
+
+        stress = min(stress, 100)
+
+        st.subheader(f"Стресс: {int(stress)}")
+
+        if st.button("💾 Сохранить", use_container_width=True):
+            try:
+                supabase.table("stress").insert({
+                    "user": user,
+                    "time": str(datetime.datetime.now()),
+                    "stress": float(stress),
+                    "type": "daily"
+                }).execute()
+
+                st.success("Сохранено")
+
+            except Exception as e:
+                st.error(e)
+
+    # ================= SAN =================
     with sub2:
         st.header("САН")
 
@@ -93,38 +146,35 @@ if st.button("💾 Сохранить"):
         def ask(q, key):
             return st.select_slider(q, options=scale, value=0, key=key)
 
-    # Самочувствие
         st.subheader("Самочувствие")
         S = [ask(f"S{i+1}", f"s_{i}") for i in range(10)]
 
-    # Активность
         st.subheader("Активность")
         A = [ask(f"A{i+1}", f"a_{i}") for i in range(10)]
 
-    # Настроение
         st.subheader("Настроение")
         M = [ask(f"M{i+1}", f"m_{i}") for i in range(10)]
 
         def norm(x):
             return (sum(x)/len(x)+3)/6*100
 
-    stress = 100 - (norm(S)+norm(A)+norm(M))/3
+        stress = 100 - (norm(S)+norm(A)+norm(M))/3
 
-    st.subheader(f"Стресс: {int(stress)}")
+        st.subheader(f"Стресс: {int(stress)}")
 
-    if st.button("💾 Сохранить САН", use_container_width=True):
-        try:
-            supabase.table("stress").insert({
-                "user": user,
-                "time": str(datetime.datetime.now()),
-                "stress": float(stress),
-                "type": "san"
-            }).execute()
+        if st.button("💾 Сохранить САН", use_container_width=True):
+            try:
+                supabase.table("stress").insert({
+                    "user": user,
+                    "time": str(datetime.datetime.now()),
+                    "stress": float(stress),
+                    "type": "san"
+                }).execute()
 
-            st.success("Сохранено")
+                st.success("Сохранено")
 
-        except Exception as e:
-            st.error(e)
+            except Exception as e:
+                st.error(e)
 # ================= ГРАФИК =================
 with tab2:
     st.header("График")
