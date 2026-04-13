@@ -66,7 +66,7 @@ with tab1:
         if min(q1,q2,q3,q4,q5) == 1:
             stress = max(stress, 80)
 
-        stress = min(stress, 100)
+            stress = min(stress, 100)
 
         st.subheader(f"Стресс: {int(stress)}")
 
@@ -86,27 +86,27 @@ if st.button("💾 Сохранить"):
     # ---------- SAN ----------
     
     with sub2:
-    st.header("САН")
+        st.header("САН")
 
-    scale = [-3,-2,-1,0,1,2,3]
+        scale = [-3,-2,-1,0,1,2,3]
 
-    def ask(q, key):
-        return st.select_slider(q, options=scale, value=0, key=key)
+        def ask(q, key):
+            return st.select_slider(q, options=scale, value=0, key=key)
 
     # Самочувствие
-    st.subheader("Самочувствие")
-    S = [ask(f"S{i+1}", f"s_{i}") for i in range(10)]
+        st.subheader("Самочувствие")
+        S = [ask(f"S{i+1}", f"s_{i}") for i in range(10)]
 
     # Активность
-    st.subheader("Активность")
-    A = [ask(f"A{i+1}", f"a_{i}") for i in range(10)]
+        st.subheader("Активность")
+        A = [ask(f"A{i+1}", f"a_{i}") for i in range(10)]
 
     # Настроение
-    st.subheader("Настроение")
-    M = [ask(f"M{i+1}", f"m_{i}") for i in range(10)]
+        st.subheader("Настроение")
+        M = [ask(f"M{i+1}", f"m_{i}") for i in range(10)]
 
-    def norm(x):
-        return (sum(x)/len(x)+3)/6*100
+        def norm(x):
+            return (sum(x)/len(x)+3)/6*100
 
     stress = 100 - (norm(S)+norm(A)+norm(M))/3
 
