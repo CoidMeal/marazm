@@ -81,8 +81,8 @@ with tab1:
 
                st.success("Сохранено")
 
-    except Exception as e:
-        st.error(e)
+            except Exception as e:
+                st.error(e)
     # ---------- SAN ----------
     with sub2:
         st.header("САН")
