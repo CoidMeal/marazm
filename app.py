@@ -84,7 +84,7 @@ if st.button("💾 Сохранить"):
     except Exception as e:
         st.error(e)
     # ---------- SAN ----------
-    with sub2:
+    
     with sub2:
     st.header("САН")
 
