@@ -5,8 +5,8 @@ import altair as alt
 from supabase import create_client
 
 # ---------- SUPABASE ----------
-url = "ТВОЙ_URL"
-key = "ТВОЙ_KEY"
+url = "https://wthspnkihisgbteoweva.supabase.co"
+key = "sb_publishable_H5FGbBuXJl6G5J5TBpmxrg_S5Spj6g6"
 supabase = create_client(url, key)
 
 ", layout="wide")
