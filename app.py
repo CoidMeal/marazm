@@ -70,19 +70,19 @@ with tab1:
 
         st.subheader(f"Стресс: {int(stress)}")
 
-        if st.button("💾 Сохранить"):
-            try:
-                supabase.table("stress").insert({
-                "user": user,
-                "time": str(datetime.datetime.now()),
-                "stress": float(stress),
-                "type": "test"
-                }).execute()
+if st.button("💾 Сохранить"):
+    try:
+        supabase.table("stress").insert({
+            "user": user,
+            "time": str(datetime.datetime.now()),
+            "stress": float(stress),
+            "type": "test"
+        }).execute()
 
-            st.success("Сохранено")
+        st.success("Сохранено")
 
-             except Exception as e:
-                 st.error(e)
+    except Exception as e:
+        st.error(e)
     # ---------- SAN ----------
     with sub2:
         st.header("САН")
