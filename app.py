@@ -8,9 +8,7 @@ from supabase import create_client
 url = "https://wthspnkihisgbteoweva.supabase.co"
 key = "sb_publishable_H5FGbBuXJl6G5J5TBpmxrg_S5Spj6g6"
 supabase = create_client(url, key)
-
-", layout="wide")
-sb_publishable_H5FGbBuXJl6G5J5TBpmxrg_S5Spj6g6
+st.set_page_config(page_title="stressctrl", layout="wide")
 # ================= ВХОД =================
 if "user" not in st.session_state:
     st.title("Контроль стресса")
