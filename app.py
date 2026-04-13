@@ -6,7 +6,7 @@ from supabase import create_client
 
 # ---------- SUPABASE ----------
 url = "https://wthspnkihisgbteoweva.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aHNwbmtpaGlzZ2J0ZW93ZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDgyMDksImV4cCI6MjA5MTY4NDIwOX0.13cxHk1mXrG3eRnIpnQFeGOulynEp4JiQJxg84rPZlo"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aHNwbmtpaGlzZ2J0ZW93ZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDgyMDksImV4cCI6MjA5MTY4NDIwOX0.13cxHk1mXrG3eRnIpnQFeGOul[...]"
 supabase = create_client(url, key)
 st.set_page_config(page_title="stressctrl", layout="wide")
 # ================= ВХОД =================
@@ -56,7 +56,7 @@ with tab1:
         q5 = ask("Настроение")
 
         score = (q1*0.25 + q2*0.25 + q3*0.2 + q4*0.2 + q5*0.1)
-        stress = (5 - score) / 4 * 100
+stress = (5 - score) / 4 * 100
 
         # штрафы
         if q2 <= 2: stress += 10
@@ -79,10 +79,10 @@ with tab1:
                 "type": "test"
                 }).execute()
 
-            st.success("Сохранено")
+                st.success("Сохранено")
 
-             except Exception as e:
-                 st.error(e)
+            except Exception as e:
+                st.error(e)
     # ---------- SAN ----------
     with sub2:
         st.header("САН")
@@ -154,11 +154,11 @@ with tab3:
             elif val >= 50: color = "orange"
 
             st.markdown(f"""
-            <div style="
+            <div style=\"
                 width:250px;height:250px;border-radius:50%;
                 border:12px solid {color};
                 display:flex;align-items:center;justify-content:center;
-                font-size:40px;margin:auto;">
+                font-size:40px;margin:auto;\">
                 {int(val)}
             </div>
             """, unsafe_allow_html=True)
