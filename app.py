@@ -9,8 +9,8 @@ url = "ТВОЙ_URL"
 key = "ТВОЙ_KEY"
 supabase = create_client(url, key)
 
-st.set_page_config(page_title="stressctrl", layout="wide")
-
+", layout="wide")
+sb_publishable_H5FGbBuXJl6G5J5TBpmxrg_S5Spj6g6
 # ================= ВХОД =================
 if "user" not in st.session_state:
     st.title("Контроль стресса")
