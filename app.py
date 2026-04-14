@@ -33,50 +33,90 @@ tab1, tab2, tab3 = st.tabs(["📋 Тесты", "📊 График", "🎯 Сег
 
     # ---------- SAN ----------
 with tab1:
-    sub1, sub2 = st.tabs(["Готовность к нагрузке", "Ваше самочувствие"])
+    sub1, sub2 = st.tabs(["📅 Ежедневный тест", "🧠 САН"])
 
     # ================= DAILY =================
     with sub1:
-        st.header("Готовность к нагрузке")
+        st.header("Ежедневный тест")
 
-        labels = {
-            5: "Отлично",
-            4: "Хорошо",
-            3: "Нормально",
-            2: "Плохо",
-            1: "Очень плохо"
-        }
+        def question(title, options):
+            return st.radio(
+                title,
+                list(options.keys()),
+                format_func=lambda x: f"{x} — {options[x]}"
+            )
 
-        def ask(q):
-            return st.radio(q, [5,4,3,2,1],
-                format_func=lambda x: f"{x} - {labels[x]}")
+        q1 = question("Усталость", {
+            5: "полностью отдохнувший",
+            4: "отдохнувший",
+            3: "нормально",
+            2: "более уставший, чем обычно",
+            1: "всегда уставший"
+        })
 
-        q1 = ask("Усталость")
-        q2 = ask("Сон")
-        q3 = ask("Боль")
-        q4 = ask("Стресс")
-        q5 = ask("Настроение")
+        q2 = question("Качество сна", {
+            5: "полностью выспался",
+            4: "хороший сон",
+            3: "трудности с засыпанием",
+            2: "прерывистый сон",
+            1: "бессонница"
+        })
 
-        score = (q1*0.25 + q2*0.25 + q3*0.2 + q4*0.2 + q5*0.1)
-        stress = (5 - score) / 4 * 100
+        q3 = question("Мышечная боль", {
+            5: "отличное самочувствие",
+            4: "хорошее самочувствие",
+            3: "нормально",
+            2: "напряжение и скованность",
+            1: "сильная боль"
+        })
 
-        if q2 <= 2: stress += 10
-        if q1 <= 2: stress += 10
-        if q4 <= 2: stress += 10
+        q4 = question("Уровень стресса", {
+            5: "полностью расслаблен",
+            4: "расслаблен",
+            3: "нормальный уровень",
+            2: "стресс",
+            1: "сильный стресс"
+        })
 
-        if min(q1,q2,q3,q4,q5) == 1:
-            stress = max(stress, 80)
+        q5 = question("Настроение", {
+            5: "отличное настроение",
+            4: "хорошее",
+            3: "меньше интереса",
+            2: "раздражён",
+            1: "сильно раздражён"
+        })
 
-        stress = min(stress, 100)
+        score = q1 + q2 + q3 + q4 + q5
 
-        st.subheader(f"Стресс: {int(stress)}")
+        # ---------- ОЦЕНКА ----------
+        if score < 14 or 1 in [q1,q2,q3,q4,q5]:
+            color = "purple"
+            text = "Высокий риск"
+        elif score <= 17 or 2 in [q1,q2,q3,q4,q5]:
+            color = "blue"
+            text = "Повышенный риск"
+        else:
+            color = "lightblue"
+            text = "Нормальное состояние"
 
-        if st.button("💾 Сохранить", use_container_width=True):
+        st.markdown(f"""
+        <div style="
+            width:200px;height:200px;border-radius:50%;
+            border:12px solid {color};
+            display:flex;align-items:center;justify-content:center;
+            font-size:35px;margin:auto;">
+            {score}
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.subheader(text)
+
+        if st.button("💾 Сохранить ежедневный", use_container_width=True):
             try:
                 supabase.table("stress").insert({
                     "user": user,
                     "time": str(datetime.datetime.now()),
-                    "stress": float(stress),
+                    "stress": float(100 - score*4),
                     "type": "daily"
                 }).execute()
 
@@ -89,24 +129,34 @@ with tab1:
     with sub2:
         st.header("САН")
 
-        scale = [3,2,1,0,1,2,3]
+        scale = [-3,-2,-1,0,1,2,3]
 
-        def ask(q, key):
-            return st.select_slider(q, options=scale, value=0, key=key)
+        def san(q, left, right, key):
+            return st.select_slider(
+                q,
+                options=scale,
+                value=0,
+                key=key,
+                format_func=lambda x: f"{left} ← {x} → {right}"
+            )
 
-        st.subheader("Самочувствие")
-        S = [ask(f"S{i+1}", f"s_{i}") for i in range(10)]
-
-        st.subheader("Активность")
-        A = [ask(f"A{i+1}", f"a_{i}") for i in range(10)]
-
-        st.subheader("Настроение")
-        M = [ask(f"M{i+1}", f"m_{i}") for i in range(10)]
+        S = [
+            san("Самочувствие", "хорошее", "плохое", "s1"),
+            san("Чувствую себя", "сильным", "слабым", "s2"),
+            san("Состояние", "активный", "пассивный", "s3"),
+            san("Подвижность", "подвижный", "малоподвижный", "s4"),
+            san("Настроение", "весёлый", "грустный", "s5"),
+            san("Настроение 2", "хорошее", "плохое", "s6"),
+            san("Работоспособность", "работоспособный", "разбитый", "s7"),
+            san("Энергия", "полный сил", "обессиленный", "s8"),
+            san("Скорость", "быстрый", "медлительный", "s9"),
+            san("Активность", "деятельный", "бездеятельный", "s10"),
+        ]
 
         def norm(x):
             return (sum(x)/len(x)+3)/6*100
 
-        stress = 100 - (norm(S)+norm(A)+norm(M))/3
+        stress = 100 - norm(S)
 
         st.subheader(f"Стресс: {int(stress)}")
 
@@ -123,6 +173,7 @@ with tab1:
 
             except Exception as e:
                 st.error(e)
+
 # ================= ГРАФИК =================
 with tab2:
     st.header("График")
