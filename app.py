@@ -30,59 +30,7 @@ user = st.session_state.user
 tab1, tab2, tab3 = st.tabs(["📋 Тесты", "📊 График", "🎯 Сегодня"])
 
 # ================= ТЕСТЫ =================
-with tab1:
-    sub1, sub2 = st.tabs(["📅 Ежедневный", "🧠 САН"])
 
-    # ---------- DAILY ----------
-    with sub1:
-        st.header("Ежедневный тест")
-
-        labels = {
-            5: "Отлично",
-            4: "Хорошо",
-            3: "Нормально",
-            2: "Плохо",
-            1: "Очень плохо"
-        }
-
-        def ask(q):
-            return st.radio(q, [5,4,3,2,1],
-                format_func=lambda x: f"{x} - {labels[x]}")
-
-        q1 = ask("Усталость")
-        q2 = ask("Сон")
-        q3 = ask("Боль")
-        q4 = ask("Стресс")
-        q5 = ask("Настроение")
-
-        score = (q1*0.25 + q2*0.25 + q3*0.2 + q4*0.2 + q5*0.1)
-        stress = (5 - score) / 4 * 100
-
-        # штрафы
-        if q2 <= 2: stress += 10
-        if q1 <= 2: stress += 10
-        if q4 <= 2: stress += 10
-
-        if min(q1,q2,q3,q4,q5) == 1:
-            stress = max(stress, 80)
-
-            stress = min(stress, 100)
-
-        st.subheader(f"Стресс: {int(stress)}")
-
-if st.button("💾 Сохранить"):
-    try:
-        supabase.table("stress").insert({
-            "user": user,
-            "time": str(datetime.datetime.now()),
-            "stress": float(stress),
-            "type": "test"
-        }).execute()
-
-        st.success("Сохранено")
-
-    except Exception as e:
-        st.error(e)
     # ---------- SAN ----------
 with tab1:
     sub1, sub2 = st.tabs(["📅 Ежедневный", "🧠 САН"])
