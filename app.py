@@ -27,233 +27,173 @@ if "user" not in st.session_state:
 user = st.session_state.user
 
 # ================= ВКЛАДКИ =================
-tab1, tab2, tab3 = st.tabs(["📋 Тесты", "📊 График", "🎯 Сегодня"])
+# ================= ГЛАВНАЯ СТРУКТУРА =================
 
-# ================= ТЕСТЫ =================
+st.header("📊 История")
 
-    # ---------- SAN ----------
-with tab1:
-    sub1, sub2 = st.tabs(["📅 Ежедневный тест", "🧠 САН"])
+# ---------- данные ----------
+data = supabase.table("stress").select("*").eq("user", user).execute()
+df = pd.DataFrame(data.data)
 
-    # ================= DAILY =================
-    with sub1:
-        st.header("Ежедневный тест")
+# ---------- фильтр периода ----------
+period = st.selectbox("Период", ["День", "Неделя", "Месяц", "Год", "Все"])
 
-        def question(title, options):
-            return st.radio(
-                title,
-                list(options.keys()),
-                format_func=lambda x: f"{x} — {options[x]}"
-            )
+if not df.empty:
+    df["time"] = pd.to_datetime(df["time"])
+    df["date"] = df["time"].dt.date
 
-        q1 = question("Усталость", {
-            5: "полностью отдохнувший",
-            4: "отдохнувший",
-            3: "нормально",
-            2: "более уставший, чем обычно",
-            1: "всегда уставший"
-        })
+    today = datetime.date.today()
 
-        q2 = question("Качество сна", {
-            5: "полностью выспался",
-            4: "хороший сон",
-            3: "трудности с засыпанием",
-            2: "прерывистый сон",
-            1: "бессонница"
-        })
+    if period == "День":
+        df = df[df["date"] >= today - datetime.timedelta(days=1)]
+    elif period == "Неделя":
+        df = df[df["date"] >= today - datetime.timedelta(days=7)]
+    elif period == "Месяц":
+        df = df[df["date"] >= today - datetime.timedelta(days=30)]
+    elif period == "Год":
+        df = df[df["date"] >= today - datetime.timedelta(days=365)]
 
-        q3 = question("Мышечная боль", {
-            5: "отличное самочувствие",
-            4: "хорошее самочувствие",
-            3: "нормально",
-            2: "напряжение и скованность",
-            1: "сильная боль"
-        })
+    df = df[df["type"].isin(["daily", "san"])]
 
-        q4 = question("Уровень стресса", {
-            5: "полностью расслаблен",
-            4: "расслаблен",
-            3: "нормальный уровень",
-            2: "стресс",
-            1: "сильный стресс"
-        })
+    df_group = df.groupby(["date", "type"])["stress"].mean().reset_index()
 
-        q5 = question("Настроение", {
-            5: "отличное настроение",
-            4: "хорошее",
-            3: "меньше интереса",
-            2: "раздражён",
-            1: "сильно раздражён"
-        })
+    chart = alt.Chart(df_group).mark_line(point=True).encode(
+        x=alt.X("date:N", title="Дата"),
+        y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100])),
+        color="type:N"
+    )
 
-        score = q1 + q2 + q3 + q4 + q5
+    st.altair_chart(chart, use_container_width=True)
 
-        # ---------- ОЦЕНКА ----------
-        if score < 14 or 1 in [q1,q2,q3,q4,q5]:
-            color = "purple"
-            text = "Высокий риск"
-        elif score <= 17 or 2 in [q1,q2,q3,q4,q5]:
-            color = "blue"
-            text = "Повышенный риск"
-        else:
-            color = "lightblue"
-            text = "Нормальное состояние"
+else:
+    st.warning("Нет данных")
 
-        st.markdown(f"""
-        <div style="
-            width:200px;height:200px;border-radius:50%;
-            border:12px solid {color};
-            display:flex;align-items:center;justify-content:center;
-            font-size:35px;margin:auto;">
-            {score}
-        </div>
-        """, unsafe_allow_html=True)
+st.divider()
 
-        st.subheader(text)
+# ================= НИЖНИЕ ВКЛАДКИ =================
+sub1, sub2 = st.tabs(["📅 Актуальное самочувствие", "🧠 Общее настроение"])
 
-        if st.button("💾 Сохранить ежедневный", use_container_width=True):
-            try:
-                supabase.table("stress").insert({
-                    "user": user,
-                    "time": str(datetime.datetime.now()),
-                    "stress": float(100 - score*4),
-                    "type": "daily"
-                }).execute()
+# ================= DAILY =================
+with sub1:
+    st.subheader("Актуальное состояние")
 
-                st.success("Сохранено")
-
-            except Exception as e:
-                st.error(e)
-
-    # ================= SAN =================
-    with sub2:
-        st.header("САН")
-
-        scale = [-3,-2,-1,0,1,2,3]
-
-        def san(q, left, right, key):
-            return st.select_slider(
-                q,
-                options=scale,
-                value=0,
-                key=key,
-                format_func=lambda x: f"{left} ← {x} → {right}"
-            )
-
-        S = [
-            san("Самочувствие", "хорошее", "плохое", "s1"),
-            san("Чувствую себя", "сильным", "слабым", "s2"),
-            san("Состояние", "активный", "пассивный", "s3"),
-            san("Подвижность", "подвижный", "малоподвижный", "s4"),
-            san("Настроение", "весёлый", "грустный", "s5"),
-            san("Настроение 2", "хорошее", "плохое", "s6"),
-            san("Работоспособность", "работоспособный", "разбитый", "s7"),
-            san("Энергия", "полный сил", "обессиленный", "s8"),
-            san("Скорость", "быстрый", "медлительный", "s9"),
-            san("Активность", "деятельный", "бездеятельный", "s10"),
-        ]
-
-        def norm(x):
-            return (sum(x)/len(x)+3)/6*100
-
-        stress = 100 - norm(S)
-
-        st.subheader(f"Стресс: {int(stress)}")
-
-        if st.button("💾 Сохранить САН", use_container_width=True):
-            try:
-                supabase.table("stress").insert({
-                    "user": user,
-                    "time": str(datetime.datetime.now()),
-                    "stress": float(stress),
-                    "type": "san"
-                }).execute()
-
-                st.success("Сохранено")
-
-            except Exception as e:
-                st.error(e)
-
-# ================= ГРАФИК =================
-with tab2:
-    st.header("График")
-
-    data = supabase.table("stress").select("*").eq("user", user).execute()
-    df = pd.DataFrame(data.data)
-
-    if not df.empty:
-        df["time"] = pd.to_datetime(df["time"])
-        df["date"] = df["time"].dt.date
-
-        # группируем отдельно
-        df_day = df.groupby(["date", "type"])["stress"].mean().reset_index()
-
-        chart = alt.Chart(df_day).mark_line(point=True).encode(
-            x=alt.X("date:N", title="День"),
-            y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100])),
-            color="type:N",
-            tooltip=["date", "stress", "type"]
+    def question(title, options):
+        return st.radio(
+            title,
+            list(options.keys()),
+            format_func=lambda x: f"{x} — {options[x]}"
         )
 
-        st.altair_chart(chart, use_container_width=True)
+    q1 = question("Усталость", {
+        5: "полностью отдохнувший",
+        4: "отдохнувший",
+        3: "нормально",
+        2: "более уставший",
+        1: "очень уставший"
+    })
 
-# ================= СЕГОДНЯ =================
-with tab3:
-    st.header("Сегодня")
+    q2 = question("Сон", {
+        5: "отличный",
+        4: "хороший",
+        3: "нормальный",
+        2: "плохой",
+        1: "очень плохой"
+    })
 
-    data = supabase.table("stress").select("*").eq("user", user).execute()
-    df = pd.DataFrame(data.data)
+    q3 = question("Боль", {
+        5: "нет",
+        4: "слабая",
+        3: "умеренная",
+        2: "сильная",
+        1: "очень сильная"
+    })
 
-    if not df.empty:
-        df["time"] = pd.to_datetime(df["time"])
-        today = datetime.date.today()
+    q4 = question("Стресс", {
+        5: "спокоен",
+        4: "норм",
+        3: "напряжен",
+        2: "стресс",
+        1: "сильный стресс"
+    })
 
-        df_today = df[df["time"].dt.date == today]
+    q5 = question("Настроение", {
+        5: "отличное",
+        4: "хорошее",
+        3: "нормальное",
+        2: "плохое",
+        1: "очень плохое"
+    })
 
-        # ---------- 1. СРЕДНИЙ ЗА ДЕНЬ ----------
-        if not df_today.empty:
-            avg = df_today["stress"].mean()
+    score = q1 + q2 + q3 + q4 + q5
 
-            if avg >= 70:
-                color = "red"
-            elif avg >= 50:
-                color = "orange"
-            else:
-                color = "green"
+    if score < 14 or 1 in [q1,q2,q3,q4,q5]:
+        color = "purple"
+        text = "Высокий риск"
+    elif score <= 17 or 2 in [q1,q2,q3,q4,q5]:
+        color = "blue"
+        text = "Повышенный риск"
+    else:
+        color = "lightblue"
+        text = "Норма"
 
-            st.subheader("Средний за день")
+    st.markdown(f"""
+    <div style="
+        width:180px;height:180px;border-radius:50%;
+        border:10px solid {color};
+        display:flex;align-items:center;justify-content:center;
+        font-size:30px;margin:auto;">
+        {score}
+    </div>
+    """, unsafe_allow_html=True)
 
-            st.markdown(f"""
-            <div style="
-                width:200px;height:200px;border-radius:50%;
-                border:12px solid {color};
-                display:flex;align-items:center;justify-content:center;
-                font-size:35px;margin:auto;">
-                {int(avg)}
-            </div>
-            """, unsafe_allow_html=True)
+    st.write(text)
 
-        # ---------- 2. ПОСЛЕДНИЙ САН ----------
-        df_san = df[df["type"] == "san"]
+    if st.button("💾 Сохранить"):
+        supabase.table("stress").insert({
+            "user": user,
+            "time": str(datetime.datetime.now()),
+            "stress": float(100 - score*4),
+            "type": "daily"
+        }).execute()
 
-        if not df_san.empty:
-            last_san = df_san.sort_values("time").iloc[-1]["stress"]
+        st.success("Сохранено")
 
-            if last_san >= 70:
-                color = "red"
-            elif last_san >= 50:
-                color = "orange"
-            else:
-                color = "green"
+# ================= SAN =================
+with sub2:
+    st.subheader("Общее настроение")
 
-            st.subheader("Последний САН")
+    scale = [-3,-2,-1,0,1,2,3]
 
-            st.markdown(f"""
-            <div style="
-                width:200px;height:200px;border-radius:50%;
-                border:12px solid {color};
-                display:flex;align-items:center;justify-content:center;
-                font-size:35px;margin:auto;">
-                {int(last_san)}
-            </div>
-            """, unsafe_allow_html=True)
+    def san(q, left, right, key):
+        return st.select_slider(
+            q,
+            options=scale,
+            value=0,
+            key=key,
+            format_func=lambda x: f"{left} ← {x} → {right}"
+        )
+
+    S = [
+        san("Самочувствие", "хорошее", "плохое", "s1"),
+        san("Сила", "сильный", "слабый", "s2"),
+        san("Активность", "активный", "пассивный", "s3"),
+        san("Настроение", "весёлый", "грустный", "s4"),
+        san("Энергия", "полный сил", "обессиленный", "s5"),
+    ]
+
+    def norm(x):
+        return (sum(x)/len(x)+3)/6*100
+
+    stress = 100 - norm(S)
+
+    st.subheader(f"Стресс: {int(stress)}")
+
+    if st.button("💾 Сохранить САН"):
+        supabase.table("stress").insert({
+            "user": user,
+            "time": str(datetime.datetime.now()),
+            "stress": float(stress),
+            "type": "san"
+        }).execute()
+
+        st.success("Сохранено")
