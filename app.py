@@ -6,7 +6,7 @@ from supabase import create_client
 
 # ---------- SUPABASE ----------
 url = "https://wthspnkihisgbteoweva.supabase.co"
-key = "ТВОЙ_KEY"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aHNwbmtpaGlzZ2J0ZW93ZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDgyMDksImV4cCI6MjA5MTY4NDIwOX0.13cxHk1mXrG3eRnIpnQFeGOulynEp4JiQJxg84rPZlo"
 supabase = create_client(url, key)
 
 st.set_page_config(page_title="stressctrl", layout="wide")
