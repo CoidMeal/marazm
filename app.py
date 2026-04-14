@@ -41,7 +41,7 @@ period = st.selectbox("Период", ["День", "Неделя", "Месяц",
 if not df.empty:
     df["time"] = pd.to_datetime(df["time"])
     df["date"] = df["time"].dt.date
-
+    
     today = datetime.date.today()
 
     if period == "День":
@@ -58,7 +58,7 @@ if not df.empty:
     df_group = df.groupby(["date", "type"])["stress"].mean().reset_index()
 
     chart = alt.Chart(df_group).mark_line(point=True).encode(
-        x=alt.X("date:N", title="Дата"),
+        x=alt.X("date:T", title="Дата"),
         y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100])),
         color="type:N"
     )
