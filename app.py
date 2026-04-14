@@ -134,11 +134,14 @@ with tab2:
         df["time"] = pd.to_datetime(df["time"])
         df["date"] = df["time"].dt.date
 
-        df = df.groupby("date")["stress"].mean().reset_index()
+        # группируем отдельно
+        df_day = df.groupby(["date", "type"])["stress"].mean().reset_index()
 
-        chart = alt.Chart(df).mark_line(point=True).encode(
-            x=alt.X("date:N"),
-            y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100]))
+        chart = alt.Chart(df_day).mark_line(point=True).encode(
+            x=alt.X("date:N", title="День"),
+            y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100])),
+            color="type:N",
+            tooltip=["date", "stress", "type"]
         )
 
         st.altair_chart(chart, use_container_width=True)
@@ -156,19 +159,50 @@ with tab3:
 
         df_today = df[df["time"].dt.date == today]
 
+        # ---------- 1. СРЕДНИЙ ЗА ДЕНЬ ----------
         if not df_today.empty:
-            val = df_today["stress"].mean()
+            avg = df_today["stress"].mean()
 
-            color = "green"
-            if val >= 70: color = "red"
-            elif val >= 50: color = "orange"
+            if avg >= 70:
+                color = "red"
+            elif avg >= 50:
+                color = "orange"
+            else:
+                color = "green"
+
+            st.subheader("Средний за день")
 
             st.markdown(f"""
             <div style="
-                width:250px;height:250px;border-radius:50%;
+                width:200px;height:200px;border-radius:50%;
                 border:12px solid {color};
                 display:flex;align-items:center;justify-content:center;
-                font-size:40px;margin:auto;">
-                {int(val)}
+                font-size:35px;margin:auto;">
+                {int(avg)}
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ---------- 2. ПОСЛЕДНИЙ САН ----------
+        df_san = df[df["type"] == "san"]
+
+        if not df_san.empty:
+            last_san = df_san.sort_values("time").iloc[-1]["stress"]
+
+            if last_san >= 70:
+                color = "red"
+            elif last_san >= 50:
+                color = "orange"
+            else:
+                color = "green"
+
+            st.subheader("Последний САН")
+
+            st.markdown(f"""
+            <div style="
+                width:200px;height:200px;border-radius:50%;
+                border:12px solid {color};
+                display:flex;align-items:center;justify-content:center;
+                font-size:35px;margin:auto;">
+                {int(last_san)}
             </div>
             """, unsafe_allow_html=True)
