@@ -11,7 +11,7 @@ supabase = create_client(url, key)
 st.set_page_config(page_title="stressctrl", layout="wide")
 # ================= ВХОД =================
 if "user" not in st.session_state:
-    st.title("Контроль стресса")
+    st.title("Анализ вашего самочувствия")
 
     name = st.text_input("Введите имя")
 
@@ -33,11 +33,11 @@ tab1, tab2, tab3 = st.tabs(["📋 Тесты", "📊 График", "🎯 Сег
 
     # ---------- SAN ----------
 with tab1:
-    sub1, sub2 = st.tabs(["📅 Ежедневный", "🧠 САН"])
+    sub1, sub2 = st.tabs(["Готовность к нагрузке", "Ваше самочувствие"])
 
     # ================= DAILY =================
     with sub1:
-        st.header("Ежедневный тест")
+        st.header("Готовность к нагрузке")
 
         labels = {
             5: "Отлично",
@@ -89,7 +89,7 @@ with tab1:
     with sub2:
         st.header("САН")
 
-        scale = [-3,-2,-1,0,1,2,3]
+        scale = [3,2,1,0,1,2,3]
 
         def ask(q, key):
             return st.select_slider(q, options=scale, value=0, key=key)
