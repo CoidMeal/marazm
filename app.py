@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import altair as alt
+import plotly.express as px
 from supabase import create_client
 
 # ---------- SUPABASE ----------
@@ -96,14 +96,24 @@ if mode == "📊 История":
         df_group = df.groupby(["date", "type"])["stress"].mean().reset_index()
         df_group["date"] = pd.to_datetime(df_group["date"])
 
-        chart = alt.Chart(df_group).mark_line(point=True).encode(
-            x=alt.X("date:T"),
-            y=alt.Y("stress:Q", scale=alt.Scale(domain=[0,100])),
-            color="type:N"
-        )
+        
 
-        st.altair_chart(chart, use_container_width=True)
+        fig = px.line(
+            df_group,
+            x="date",
+            y="stress",
+            color="type",
+            markers=True
+)
 
+        fig.update_layout(
+            yaxis=dict(range=[0,100]),
+            xaxis_title="Дата",
+            yaxis_title="Стресс",
+            hovermode="x unified"
+) 
+
+        st.plotly_chart(fig, use_container_width=True)
 # ================= ТЕСТЫ =================
 if mode == "🧪 Тесты":
 
