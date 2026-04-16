@@ -177,13 +177,26 @@ if mode == "🧪 Тесты":
         st.subheader(f"Стресс: {int(stress)}")
 
 
-        if st.button("💾 Сохранить daily"):
+        if st.button("💾 Сохранить", use_container_width=True):
+
             supabase.table("stress").insert({
-                "user": user,
-                "time": str(datetime.datetime.now()),
-                "stress": float(stress),
-                "type": "daily"
+            "user": user,
+            "time": str(datetime.datetime.now()),
+            "stress": float(stress),
+            "type": "daily"
             }).execute()
+
+        st.success("Сохранено")
+
+    # ---------- СООБЩЕНИЕ ----------
+        if stress < 30:
+            st.success("Отличное состояние - можно тренироваться на максимум")
+        elif stress < 50:
+            st.info("Нормальное состояние - хорошая форма")
+        elif stress < 70:
+            st.warning("Есть усталость - лучше снизить нагрузку")
+        else:
+            st.error("Высокий стресс - нужен отдых")
 
         # ===== среднее за день =====
         data = supabase.table("stress").select("*").eq("user", user).eq("type", "daily").execute()
@@ -258,13 +271,26 @@ if mode == "🧪 Тесты":
 
         st.subheader(f"Стресс: {int(stress)}")
 
-        if st.button("💾 Сохранить san"):
+        if st.button("💾 Сохранить САН", use_container_width=True):
+
             supabase.table("stress").insert({
                 "user": user,
                 "time": str(datetime.datetime.now()),
                 "stress": float(stress),
                 "type": "san"
-            }).execute()
+                }).execute()
+
+        st.success("Сохранено")
+
+    # ---------- СООБЩЕНИЕ ----------
+        if stress < 30:
+            st.success("Общее состояние отличное")
+        elif stress < 50:
+            st.info("Есть небольшая усталость")
+        elif stress < 70:
+            st.warning("Состояние ухудшается - стоит отдохнуть")
+        else:
+            st.error("Плохое состояние - возможен перегруз")
 
         # ===== среднее =====
         data = supabase.table("stress").select("*").eq("user", user).eq("type", "san").execute()
